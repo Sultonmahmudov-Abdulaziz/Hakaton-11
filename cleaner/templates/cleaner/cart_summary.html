@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="row gx-4 gx-lg-5 align-items-center">
+            {% for product in products %}
+
+            {% for key,value in quantities.items %}
+
+            {% if key ==  product.id|slugify %}
+            <div class="card mb-3" style="max-width: 540px;">
+              <div class="row g-0">
+                <div class="col-md-4">
+                  <img src="{{product.image.url}}" class="img-fluid rounded-start" alt="...">
+                </div>
+                <div class="col-md-8">
+                  <div class="card-body">
+                    <h5 class="card-title">{{product.name}}</h5>
+
+                    <div class="d-flex align-items-center mt-3" >
+                        <label for="inputQuantity" >Ishchi soni: </label>
+                        <input class="form-control text-center me-3" id="inputQuantity" type="num" value="{{value}}" style="max-width: 3rem" />
+                        <button class="btn btn-outline-primary" id="update-cart"  data-index="{{product.id}}" >Tahrirlash</button>
+
+                    </div>
+
+                      <a href="#" class="btn btn-outline-danger mt-5"  id="delete_product" data-index="{{product.id}}" >Delete</a>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+
+              <a  style="text-align: center; " href="https://t.me/hacatontelegram_bot">Buyurtma berishdan oldin ushbu linkga o'ting-></a>
+            <h3 class="mt-5 text-center">Jami hizmat narxi: ${{total}} &nbsp; <a href="#"  data-bs-toggle="modal" data-bs-target="#exampleModal" class="btn btn-outline-warning fs-5 p-2">Order</a>  </h3>
+        </div>
+    </div>
+
+</section>
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Siz shu mahsulotlarni haqiqatdan ham zakaz bermoqchimisiz?</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Id</th>
+      <th scope="col">Hizmat turi</th>
+      <th scope="col">Narxi</th>
+      <th scope="col">Ishchilar soni</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    {% for order in all_orders %}
+    <tr>
+      <th scope="row">{{order.id}}</th>
+      <td>{{order.name}}</td>
+      <td>{{order.price}}</td>
+      <td>{{order.quantity}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+          {% if user.is_authenticated %}
+        <form method="post" action="{% url 'cleaner:order' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Ha tasdiqlayman</button>
+        </form>
+          {% else %}
+          <form method="post" action="{% url 'login_page' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Ha tasdiqlayman</button>
+        </form>
+          {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+
+    // #delete uchun script
+
+    $(document).on('click', '#delete_product',function(e){
+        e.preventDefault();
+        $.ajax({
+            type:'POST',
+            url:"{% url 'cleaner:cart_delete' %}",
+            data:{
+                product_id: $(this).data('index'),
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                action:'post'
+            },
+            success: function(json){
+                console.log(json)
+                location.reload()
+            }
+        })
+    })
+
+    // update uchun script
+
+    $(document).on('click', '#update-cart',function(e){
+        e.preventDefault();
+        $.ajax({
+            type:'POST',
+            url:"{% url 'cleaner:cart_update' %}",
+            data:{
+                product_id: $(this).data('index'),
+                product_quantity: $('#inputQuantity').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                action:'post'
+            },
+            success: function(json){
+                console.log(json)
+                location.reload()
+            }
+        })
+    })
+
+
+
+
+
+</script>
+
+
+
+{% endblock %}
